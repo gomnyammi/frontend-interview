@@ -156,6 +156,8 @@ Google Analytics를 설치하고, 제목을 적절하게 배치합니다. sitemp
 <hr>
 
 - [CSR, SSR, SPA, MPA? 상사한테 혼나기 전에 알아야하는 것](HTTPS://blog.hahus.kr/csr-ssr-spa-mpa-ede7b55c5f6f)
+- [서버 사이드 렌더링과 클라이언트 사이드 렌더링](https://seonghui.github.io/TIL/docs/etc/csr-ssr.html)
+- [왜 React와 서버 사이드 렌더링인가?](https://subicura.com/2016/06/20/server-side-rendering-with-react.html)
 
 <br>
 
@@ -481,9 +483,9 @@ Web Storage의 개념은 키/값 쌍으로 데이터를 저장하고, 키를 기
 10. 중간에 HTML파서는 Script태그를 만나게 되면 javascript 코드를 실행하기 위해 파싱을 중단합니다.
 11. 제어권한을 자바스크립트 엔진에게 넘기고, 자바스크립트 코드 또는 파일을 로드해서 파싱하고 실행합니다.
 
+<hr>
 
-
-
+- [참조](https://developers.google.com/web/fundamentals/performance/critical-rendering-path/?hl=ko)
 
 <br>
 
@@ -1821,6 +1823,10 @@ ES2015에서는 AMD 및 commonJS를 모두 대체하기 위한 모듈 문법을 
 
 <br>
 
+## 💬 Static typing vs dynamic typing 차이점과 각 장 단점은 무엇인가요?
+
+<br>
+
 ## 💬 자바스크립트 this란?
 ## 💬 화살표 함수, call, bind, apply에 대해
 ## 💬 자바스크립트 비동기 처리에 대한 설명
@@ -2384,23 +2390,67 @@ Next.js Live (Preview Release): 브라우저를 통해 실시간 협업 코딩 �
 ## 💬 Nextjs는 ssr을 처리할 수 있음과 동시에 csr영역도 담당하므로 여러 문제 또는 현상이 발생할 슈 있다. 예를 들어 현재 환경이 브라우저인지 서버인지 판단하기 어렵다. 어떻게 판단하면 될까?
 ## 💬 Reject하지않은 CRA 리액트는 csr이다. 따라서 next나 cra를 reject 처리하여 ssr을 구현하는데 왜 이렇게 번거로운 작업을 하는것인가?
 ## 💬 클라이언트는 react 서버사이드 프레임워크는 next 서버는 nodejs를 사용한다고 했을때 ssr과정이 어떻게 일어나는지 코드 관점에서 구체적으로 설명해달라 (브라우저에 렌더링이 되기까지)
-## 💬 Ssr을 적용하면 서버에서 데이터를 채운 html파일을 보내줘야한다. 너가 한 프로젝트에서는 그 데이터를 어디서 가져왔는가?
-## 💬 Static typing vs dynamic typing 차이점과 각 장 단점은 무엇인가?
+Next 9 버전
+
+새로고침
+
+브라우저 => 프론트엔드 서버 => 브라우저 => 프론트엔드 서버 => 백엔드 서버 => 프론트엔드 서버 => 브라우저 : CSR
+브라우저 => 프론트엔드 서버 => 백엔드 서버 => 프론트엔드 서버 => 브라우저 : SSR
+초기 로딩 속도가 조금 빠른 느낌을 줄 수 있다.
+사전 작업으로, SSR 구현 전 적용되었던 라이브러리 들은 가급적 제거하는게 좋다. 가볍게할 것. 버전 업데이트 할 때 좋다. next에서 SSR용 메서드 네 개를 제공하는데, redux랑 사용하려면 문제가 좀 있다. 그래서 next-redux-wrapper를 사용하는게 좋다.
+
+원리는, 메인부터 보자면 화면이 로딩된 후에 useEffect를 통해 사용자, 게시글 정보를 받아 오는데 화면이 처음 로딩될 때는 사용자, 게시글 정보가 존재하지 않다가 불러오면서 데이터의 공백이 발생된다. 그러면 화면을 받아올때부터 데이터를 불러올 수 있다면? 그러면 데이터가 채워친 채로 화면이 그려질 수있다. 즉, 홈 컴포넌트보다 먼저 실행될 게 필요한데 종류가 여러가지 있다.
+
+getInitialProps는 next 8버전이다. next 9버전부터 3개가 추가 되었다. getStaticprops, getstaticpath, getserversideprops.
+
+```js
+export const getServerSideProps = wrapper.getServerSideProps(  context =>
+  async ({ req }) => {
+    context.store.dispatch({
+      type: LOAD_MY_INFO_REQUEST,
+    });
+
+    // 몇 개 불러왔는지 데이터를 가지고 있어야 함
+    context.store.dispatch({
+      type: LOAD_POSTS_REQUEST,
+    });
+  }
+);
+```
+
+useEffect로 가져오는 dispatch를 먼저 실행하는 것이다. 물론, 여기서 바로 실행하면 어떤 데이터 정보도 담기지 않지만 HYDRATE라는 개념이 등장한다. NEXTREDUXWRAPPERHYDRATE. getServerSideProps에서 dispatch를 하면 store에 변화가 생기므로 NEXTREDUXWRAPPERHYDRATE로 액션이 실행되면서 데이터를 받는다.
+
+state에 정보를 덮어씌워야 하는데 HYDRATE가 이상하게 실행되어 다른 곳에 데이터를 넣어주고 있다면 reducer의 구조를 다시 한 번 점검해야 한다.
+
+getStaticProps
+getServerSideProps의 차이?
+
+언제 접속해도 데이터가 변경되지 않을거라면 getStaticProps
+접속하는 상황에 따라 화면이 바뀌어야 되면 getServerSideProps를 사용해야 한다.
+getStaticProps는 블로그 게시글처럼 정말 거의 안바뀌는 것들에 사용하는데, 사용하기가 매우 까다롭다.
+
+빌드할때 아예 정적인 HTML타입으로 변환시켜준다.
+getStaticProps를 사용할 수 있다면 getStaticProps쓰는게 서버에는 무리가 덜 간다. 정적인 HTML이므로
+생각보다 쓰기 어려운 이유는.. 어떤 페이지든 계속 변경되어야 하기 때문이다.
+
+https://medium.com/%EB%8F%84%EA%B9%A8%EB%B9%84-%EC%9D%B4%EC%95%BC%EA%B8%B0/getstaticprops%EC%99%80-getserversideprops-in-next-js-ab076c253d2c
+
+## 💬 SSR을 적용하면 서버에서 데이터를 채운 HTML파일을 보내줘야한다. 너가 한 프로젝트에서는 그 데이터를 어디서 가져왔는가?
 ## 💬 타입 시스템에 대해서 알고 있는지? 타입스크립트를 써봤는지?
 ## 💬 자바스크립트와 타입스크립트의 차이점?
 ## 💬 타입스크립트의 장점과 단점?
 ## 💬 타입스크립트를 사용해본 경험이 있는가, 타입스크립트에 대한 본인의 생각과 도입시의 장점을 말해달라
 
-## 💬 스타일드 컴포넌트 vs 이모션 // https://brunch.co.kr/@kmongdev/17
+## 💬 스타일드 컴포넌트 vs 이모션
+### 📣 CSS의 문제점
 
-css의 문제점
+### 📣 BEM
 
-bem
+### 📣 css module
 
-css module
+### 📣 css in js
 
-css in js
-
+- [](https://brunch.co.kr/@kmongdev/17)
 css-prop, 이모션과 스타일드 컴포넌트의 가장 큰 차이점 // https://emotion.sh/docs/css-prop
 기존 정의한 컴포넌트 스타일을 쉽고 안전하게 확장할 수 있음
 @emotion/styled는 styled-components와 거의 동일한 기능을 제공하고 있고, 추가로 @emotion/core를 통해 확장성까지 갖추었습니다.
@@ -2503,20 +2553,51 @@ http는 비용이 큰 프로토콜이라 매우 큰 부하를 주게된다고 �
 <br>
 
 ## 💬 Webpack은 무엇인가요?
+> 웹팩(Webpack)은 오픈 소스 자바스크립트 모듈 번들러입니다.
+
+자바스크립트를 위한 모듈 번들러이지만 호환 플러그인을 포함하는 경우 HTML, CSS, 심지어는 이미지와 같은 프론트엔드 리소스를 변환할 수 있죠. 웹팩은 의존성이 있는 모듈을 취하여 해당 모듈을 대표하는 정적 리소스를 생성합니다.
+
+웹팩은 의존성을 취한 다음 의존성 그래프를 만듦으로써 웹 개발자들이 웹 애플리케이션 개발 목적을 위해 모듈 방식의 접근을 사용할 수 있게 도와줍니다. CLI를 통해서 사용할 수 있으며, `webpack.config.js`이라는 이름의 구성 파일을 사용하여 구성할 수 있습니다. 이 파일을 사용하면 프로젝트를 위해 로더, 플러그인 등을 정의할 수 있죠(웹팩은 로더를 통해 상당한 확장이 가능하므로 개발자들이 파일을 함께 번들링할 때 수행하기 원하는 사용자 지정 작업을 작성할 수 있어요).
+
+단, 웹팩 설치에는 Node.js가 요구됩니다. 또한 moniker 코드 스플리팅을 사용한 코드 온 디맨드를 제공하고 있습니다.
+
+웹팩은 다른 모듈 번들러에 비해 성능이 우수합니다. Grunt, Gulp는 오로지 리소스들에 대한 툴로 사용되며 dependency graph에 대한 개념이 없고, Browsify는 비슷한 도구이나 속도 측면에서 웹팩이 더 좋습니다.
+
+따라서 다양한 리소스들이 들어있는 프로젝트에는 웹팩을 사용하는 것이 좋습니다.
+
+<br>
+
+### 📣 번들
+> 번들(Bundle)은 소프트웨어 및 일부 하드웨어와 함께 작동하는 데 필요한 모든 것을 포함하는 Package입니다.
+
+각 모듈들의 의존성을 파악하여 하나 또는 여러 개로 그룹핑합니다.
 
 <br>
 
 ## 💬 ESLint가 무엇인가요? 
-Eslint는 소스코드를 스캔하여 문법적오류나 잠재적 오류까지 찾아내고 오류의 이유를 볼 수 있게 해주는 도구
+> ESLint는 ES 와 Lint의 합성어입니다.
+
+ES는 Ecma Script, 표준 Javascript를 의미하며 Lint는 에러가 있는 코드에 표시를 달아놓는 것이죠. ESLint는 자바스크립트 문법의 에러를 표시해줍니다.
+
+ESLint를 설정함으로서 특정 부분만을 제한하거나 전반적인 코딩 스타일을 지정할 수 있습니다.
 
 <br>
 
 ## 💬 Prettier가 무엇인가요?
-prettier는 정해진 규칙대로 코드를 이쁘게 할 수 있는 도구, 들여쓰기나 따옴표 등 
+> 정해진 규칙대로 코드를 정리해주는 도구입니다.
 
 <br>
 
 ## 💬 Linter를 사용했을때 장점은 무엇인가요?
+> 소스 코드를 스캔하여 문법적 오류나 잠재적 오류까지 찾아내고 오류의 이유를 볼 수 있게 해주는 도구입니다.
+
+- 구문 오류로 인한 코드의 버그를 알려줍니다.
+- 코드가 직관적이지 않을 때 경고합니다.
+- 일반적인 모범 사례를 제안합니다.
+- TODO 및 FIXME를 추적합니다.
+- 일관된 코드 스타일을 유지할 수 있습니다.
+
+이는 여러 프로젝트에서 동일한 코드 표준을 적용하고, 협업 간 의사소통이 원활하게 되며 가독성과 유지보수가 좋아지는 장점이 있습니다.
 
 <br>
 
@@ -2533,11 +2614,6 @@ npm은 다른 package를 즉시 포함 시킬 수 있는 코드를 자동으로 
 
 - 결론
 둘 다 이점이 있고 사용자에 필요한 기능들을 가지고 있습니다. yarn 은 효율적이면서도 공간을 많이 차지 합니다. yarn 은 더 최신에 등장 했지만 보안과 안정성을 업데이트 하면서 많은 인기를 끌고 있습니다. npm 역시도 다른 manager들을 따라가기 위해 노력중입니다.
-
-<br>
-
-## 💬 npm과 yarn은 어떤게 다른가?
-과거 깃허브에서 받은 소스코드를 npm i로 패키지를 설치 했을 때 이전과 버전정보가 다른 환경문제가 생길 수 있었는데 이것을 처리하기 위해서 yarn.lock 파일에서 처리할 수 있었다. 하지만, 현재는 npm의 package-lock.json에서 이 처리를 동일하게 사용할 수 있다.
 
 <br>
 
