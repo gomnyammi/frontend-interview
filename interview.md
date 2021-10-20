@@ -139,7 +139,7 @@ DNS resolution, Preconnect, Prefetching, Preloading이 있지만 이를 사용�
 <br>
 
 ### ❓ SEO 설정에는 무엇이 있나요?
-Google Analytics를 설치하고, 제목을 적절하게 배치합니다. sitempa.xml이 Google Search Console에 제출되었고, robots.txt 파일이 웹 페이지를 블로킹하지 않아야 합니다.
+Google Analytics를 설치하고, 제목을 적절하게 배치합니다. sitemap.xml이 Google Search Console에 제출되었고, robots.txt 파일이 웹 페이지를 블로킹하지 않아야 합니다.
 
 웹 페이지가 정형화 된 구조를 가지고 있다면 웹 크롤러가 페이지 내 컨텐츠를 이해하는데 도움을 줍니다.
 
